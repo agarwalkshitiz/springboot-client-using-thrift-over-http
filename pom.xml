@@ -1,0 +1,144 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.ka</groupId>
+  <artifactId>thriftoverhttpusingspringbootclient</artifactId>
+  <version>0.0.1</version>
+  <packaging>jar</packaging>
+
+  <name>thriftoverhttpusingspringbootclient</name>
+  <url>http://maven.apache.org</url>
+
+  <parent>
+    <groupId>com.oyo</groupId>
+    <artifactId>oyo-microservice-parent</artifactId>
+    <version>0.0.3</version>
+  </parent>
+
+  <repositories>
+    <repository>
+      <id>s3.release</id>
+      <url>s3://repo.oyo.com/release</url>
+    </repository>
+    <repository>
+      <id>s3.snapshot</id>
+      <url>s3://repo.oyo.com/snapshot</url>
+    </repository>
+  </repositories>
+
+  <properties>
+    <package.name>${project.groupId}.${project.artifactId}</package.name>
+    <thrift.exe>thrift</thrift.exe>
+    <thrift.interface>${basedir}/src/main/resources/api.thrift</thrift.interface>
+    <gendir.target>${basedir}/target/generated-sources</gendir.target>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-dependencies</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>
+                ${project.build.directory}/libs
+              </outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>libs/</classpathPrefix>
+              <mainClass>
+                ${package.name}.CalculatorClient
+              </mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>target/generated-sources/gen-javabean</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-sources</id>
+            <phase>generate-sources</phase>
+            <configuration>
+              <target>
+                <echo>create (or clear) output directory for generated
+                  files</echo>
+                <mkdir dir="${gendir.target}" />
+                <delete>
+                  <fileset dir="${gendir.target}" includes="**/*" />
+                </delete>
+                <echo>generate java source files to ${gendir.target}
+                  from ${thrift.interface}</echo>
+                <exec executable="${thrift.exe}">
+                  <arg value="--gen" />
+                  <arg value="java:beans" />
+                  <arg value="-o" />
+                  <arg value="${gendir.target}" />
+                  <arg value="${thrift.interface}" />
+                </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+        <version>1.8</version>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.7.9</version>
+        <executions>
+          <execution>
+            <id>pre-unit-test</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>post-unit-test</id>
+            <phase>package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

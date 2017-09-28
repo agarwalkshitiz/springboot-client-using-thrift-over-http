@@ -1,0 +1,9 @@
+.DS_Store
+target/
+access.log
+log4j-application.log
+.settings/
+.settings/org.eclipse.core.resources.prefs
+.settings/org.eclipse.jdt.core.prefs
+.factorypath
+.springBeans
